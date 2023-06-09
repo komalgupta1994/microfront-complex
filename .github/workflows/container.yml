@@ -1,0 +1,28 @@
+name: deploy-container
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'container/**'
+      
+# defaults are used when we want to run specific command for specific folder, so here it is for container
+defaults:
+  run:
+    working-directory: container
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # it will create VM where our jenkins build going to run our all command like npm i
+    steps:
+      - uses: actions/checkout@v2 # it will copy our complete code into the VM
+      - run: npm install
+      - run: npm run build
+      
+      # this is for deploy our code into AWS S3
+      - uses: komal/action-aws-s3@v1.1
+      - run: aws s3 sync dist s3://${{ secrets.AWS_S3_BUCKET_NAME }}/container/latest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_ACCESS_SECRETS_KEY: ${{ secrets.AWS_ACCESS_SECRETS_KEY }}
